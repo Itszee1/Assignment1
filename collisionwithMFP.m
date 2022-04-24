@@ -1,6 +1,6 @@
 
 
-Nm = 10;     % Number of Molecules
+Nm = 20;     % Number of Molecules
 colours = ["b", "c", "g", "k", "m", "r", "y"];   %This are the different colors that will be represented in the plot
 
 kb = 1.38064852; %This is the Boltzmann constant
@@ -27,13 +27,13 @@ figure(1)
 title(sprintf("Initial Avg Velocity: %s", mean(sqrt(molecules(:, 3).^2 + molecules(:, 4).^2))))
 histogram(rssq(molecules(:, 3:4), 50));
 
-position_of_last_scatter = molecules(:, 3:4);
+oldMolecules = molecules(:, 3:4);
 
 
 
 % main time loop
 for i = 0:50      
-    previous_particles = molecules;
+    prMolecules = molecules;
     
     % update positions
     molecules(:, 1) = molecules(:, 1) + molecules(:, 4);
@@ -41,30 +41,30 @@ for i = 0:50
     
      % This is to make sure the particles do not leave the shape from the
     % right side
-    x_boundary_changes_right = molecules(:, 2) > 200;
-    if any(x_boundary_changes_right)
-        molecules(:, 2) = molecules(:, 2) .* ~x_boundary_changes_right;
+    XchangesRight = molecules(:, 2) > 200;
+    if any(XchangesRight)
+        molecules(:, 2) = molecules(:, 2) .* ~XchangesRight;
     end
  %This is to make sure the particles do not leave the shape from the
     % right side
-    x_boundary_changes_left = molecules(:, 2) < 0;
-    if any(x_boundary_changes_left)
-        molecules(:, 2) = molecules(:, 2) + 200 * x_boundary_changes_left - abs(molecules(:, 2) .* x_boundary_changes_left);
+    XchangesLeft = molecules(:, 2) < 0;
+    if any(XchangesLeft)
+        molecules(:, 2) = molecules(:, 2) + 200 * XchangesLeft - abs(molecules(:, 2) .* XchangesLeft);
     end
     %This is to make sure the particles do not leave the shape from the top 
      %of shape
-    y_boundary_changes_upper = molecules(:, 1) > 100;
-    if any(y_boundary_changes_upper)
-        molecules(:, 4) = molecules(:, 4) - (2 * molecules(:, 4) .* y_boundary_changes_upper);
-        overshoot = (molecules(:, 1) - 100) .* y_boundary_changes_upper;
+    YchangesUp = molecules(:, 1) > 100;
+    if any(YchangesUp)
+        molecules(:, 4) = molecules(:, 4) - (2 * molecules(:, 4) .* YchangesUp);
+        overshoot = (molecules(:, 1) - 100) .* YchangesUp;
         molecules(:, 1) = molecules(:, 1) - 2 * overshoot;
     end
      %This is to make sure the particles do not leave the bottom of the
     %shape
-    y_boundary_changes_lower = molecules(:, 1) < 0;
-    if any(y_boundary_changes_lower)
-        molecules(:, 4) = molecules(:, 4) - (2 * molecules(:, 4) .* y_boundary_changes_lower);
-        overshoot = abs(molecules(:, 1)) .* y_boundary_changes_lower;
+    YchangesDown = molecules(:, 1) < 0;
+    if any(YchangesDown)
+        molecules(:, 4) = molecules(:, 4) - (2 * molecules(:, 4) .* YchangesDown);
+        overshoot = abs(molecules(:, 1)) .* YchangesDown;
         molecules(:, 1) = molecules(:, 1) + 2 * overshoot;
     end
     
@@ -72,25 +72,25 @@ for i = 0:50
     Scattered = rand(Nm, 1) < scattProb;
     if any(Scattered)
         Scattered(:, 2) = Scattered;
-        FP = abs(position_of_last_scatter - Scattered(:, 2) .* molecules(:, 3:4));%This is free path
+        FP = abs(oldMolecules - Scattered(:, 2) .* molecules(:, 3:4));%This is free path
         MFP = mean(FP, "all");
         angles = randn(Nm, 1) .* 2 * pi;
-        rethermalized_velocities(:, 1:2) = randn(Nm, 2) * sqrt(kb * T / m) / 1E15;
-        rethermalized_velocities = rethermalized_velocities .* Scattered;
-        molecules(:, 3:4) = molecules(:, 3:4) .* ~Scattered + rethermalized_velocities;
-        position_of_last_scatter = molecules(:, 3:4);
+        rethermVelo(:, 1:2) = randn(Nm, 2) * sqrt(kb * T / m) / 1E15; %This is rethermalized velocities
+        rethermVelo = rethermVelo .* Scattered;
+        molecules(:, 3:4) = molecules(:, 3:4) .* ~Scattered + rethermVelo;
+        oldMolecules = molecules(:, 3:4);
     end
     
     % Plot of Molecules 
-    x_boundary_affected = x_boundary_changes_right | x_boundary_changes_left;
-    temp_avg = mean(((sqrt(molecules(:, 3).^2 + molecules(:, 4).^2) .* 1E15).^2) .* m ./ kb);
+    Xchanges = XchangesRight | XchangesLeft;
+    avgTemp = mean(((sqrt(molecules(:, 3).^2 + molecules(:, 4).^2) .* 1E15).^2) .* m ./ kb);
     % subplot(2, 1, 2)
     hold on
     figure(2)
-    title(sprintf("Avg Temperature: %s, Mean Free Path is: %s", temp_avg, MFP))
+    title(sprintf("Average Temperature: %s, The Mean Free Path is: %s", avgTemp, MFP))
     for i = 1:length(molecules)
-        if ~x_boundary_affected(i)
-            plot([previous_particles(i, 2) molecules(i, 2)], [previous_particles(i, 1) molecules(i, 1)], colours(mod(i, length(colours)) + 1))
+        if ~Xchanges(i)
+            plot([prMolecules(i, 2) molecules(i, 2)], [prMolecules(i, 1) molecules(i, 1)], colours(mod(i, length(colours)) + 1))
         end
     end
     axis([0 200 0 100])
