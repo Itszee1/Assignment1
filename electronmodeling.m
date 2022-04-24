@@ -34,40 +34,40 @@ for i = 0:50
     
     % This is to make sure the particles do not leave the shape from the
     % right side
-    x_boundary_changes_right = molecules(:, 2) > 200;
-    if any(x_boundary_changes_right)
-        molecules(:, 2) = molecules(:, 2) .* ~x_boundary_changes_right;
+    XchangesRight = molecules(:, 2) > 200;
+    if any(XchangesRight)
+        molecules(:, 2) = molecules(:, 2) .* ~XchangesRight;
     end
     %This is to make sure the particles do not leave the shape from the
     % right side
-    x_boundary_changes_left = molecules(:, 2) < 0;
-    if any(x_boundary_changes_left)
-        molecules(:, 2) = molecules(:, 2) + 200 * x_boundary_changes_left - abs(molecules(:, 2) .* x_boundary_changes_left);
+    XchangesLeft = molecules(:, 2) < 0;
+    if any(XchangesLeft)
+        molecules(:, 2) = molecules(:, 2) + 200 * XchangesLeft - abs(molecules(:, 2) .* XchangesLeft);
     end
      %This is to make sure the particles do not leave the shape from the top 
      %of shape
-    y_boundary_changes_upper = molecules(:, 1) > 100;
-    if any(y_boundary_changes_upper)
-        molecules(:, 4) = molecules(:, 4) - (2 * molecules(:, 4) .* y_boundary_changes_upper);
-        overshoot = (molecules(:, 1) - 100) .* y_boundary_changes_upper;
+    YchangesUp = molecules(:, 1) > 100;
+    if any(YchangesUp)
+        molecules(:, 4) = molecules(:, 4) - (2 * molecules(:, 4) .* YchangesUp);
+        overshoot = (molecules(:, 1) - 100) .* YchangesUp;
         molecules(:, 1) = molecules(:, 1) - 2 * overshoot;
     end
     %This is to make sure the particles do not leave the bottom of the
     %shape
-    y_boundary_changes_lower = molecules(:, 1) < 0;
-    if any(y_boundary_changes_lower)
-        molecules(:, 4) = molecules(:, 4) - (2 * molecules(:, 4) .* y_boundary_changes_lower);
-        overshoot = abs(molecules(:, 1)) .* y_boundary_changes_lower;
+    YchangesDown = molecules(:, 1) < 0;
+    if any(YchangesDown)
+        molecules(:, 4) = molecules(:, 4) - (2 * molecules(:, 4) .* YchangesDown);
+        overshoot = abs(molecules(:, 1)) .* YchangesDown;
         molecules(:, 1) = molecules(:, 1) + 2 * overshoot;
     end
     
     % plot position updates of particles 
-    x_boundary_affected = x_boundary_changes_right | x_boundary_changes_left;
+    Xchanges = XchangesRight | XchangesLeft;
     AvgTemp = mean(((sqrt(molecules(:, 3).^2 + molecules(:, 4).^2) .* 1E15).^2) .* m ./ kb);
     title(sprintf("Average Temperature: %s", AvgTemp))
     
     for i = 1:length(molecules)
-        if ~x_boundary_affected(i)
+        if ~Xchanges(i)
             plot([OldMolecules(i, 2) molecules(i, 2)], [OldMolecules(i, 1) molecules(i, 1)], colors(mod(i, length(colors)) + 1))
         end
     end
